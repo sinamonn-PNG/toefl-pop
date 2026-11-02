@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#73c9f4">
+<meta name="description" content="自分だけのTOEFL単語帳と10秒4択クイズ">
+<link rel="manifest" href="manifest.webmanifest">
+<title>TOEFL POP! 単語クイズ</title>
+<style>
+:root{--ink:#24415c;--muted:#6d8aa2;--bg:#f4fbff;--card:#fff;--purple:#69bfea;--pink:#9ddcf7;--cyan:#74d4ee;--green:#39a98b;--red:#e46c82;--line:#d8edf8}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 5% 0%,#dff5ff,transparent 38%),radial-gradient(circle at 100% 18%,#eaf8ff,transparent 30%),var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:780px;margin:auto;padding:20px 15px 60px}.top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+h1{font-size:27px;margin:0;font-weight:900;letter-spacing:-1px}.logo{color:var(--purple)}.tag{background:#fff;border:1px solid var(--line);border-radius:30px;padding:7px 11px;font-size:12px;font-weight:800;color:var(--purple)}
+.sub{color:var(--muted);font-size:13px;margin-top:4px}
+nav{display:flex;gap:7px;overflow:auto;margin:18px 0 14px}.tab,button{border:0;border-radius:13px;padding:11px 14px;font-weight:800;font-size:14px;cursor:pointer}
+.tab{white-space:nowrap;background:#e7f6fd;color:#5f88a3}.tab.active,.primary{background:var(--purple);color:#fff}.secondary{background:#e8f7ff;color:#3f9dcc}.pink{background:#eaf9ff;color:#3199c9}.ghost{background:#fff;border:1px solid var(--line);color:var(--muted)}button:disabled{opacity:.45}
+.card{background:#ffffffed;border:1px solid var(--line);border-radius:21px;padding:19px;margin:12px 0;box-shadow:0 10px 30px #4aa9d814}
+h2{font-size:18px;margin:0 0 12px}.muted{font-size:12px;color:var(--muted);line-height:1.65}
+label{display:block;font-size:13px;font-weight:800;margin:12px 0 6px}
+input,textarea,select{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff;font:inherit;color:var(--ink)}
+textarea{min-height:100px}.row{display:flex;gap:9px;align-items:center}.row>*{flex:1;min-width:0}
+.pills{display:flex;gap:7px;flex-wrap:wrap}.pill{border-radius:30px;padding:7px 10px;background:#e8f7ff;color:#3f9dcc;font-size:12px;font-weight:800}
+.stat{padding:10px 12px;border:1px solid var(--line);background:#f7fcff;border-radius:13px;font-size:12px;font-weight:700}
+.list{display:grid;gap:7px;margin-top:12px}.item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;border-radius:12px;background:#f7fcff;font-size:13px}
+.item small{color:var(--muted)}.item button{padding:7px 9px}
+.hidden{display:none!important}.center{text-align:center}
+.qtop{display:flex;justify-content:space-between;align-items:center}.timer{font-size:25px;color:var(--pink);font-weight:900;font-variant-numeric:tabular-nums}
+.progress{height:7px;border-radius:20px;background:#e4f3fa;margin:13px 0;overflow:hidden}.bar{height:100%;background:linear-gradient(90deg,#5dbbea,#9edff8);width:0}
+.word{font-size:clamp(35px,9vw,53px);font-weight:950;text-align:center;margin:25px 0 20px;overflow-wrap:anywhere}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:9px}.choice{min-height:66px;text-align:left;background:#fff;border:1.5px solid var(--line);display:flex;align-items:center;gap:10px}.choice b{background:#e8f7ff;color:#3f9dcc;padding:6px 9px;border-radius:9px}.choice.good{border-color:var(--green);background:#effbf7}.choice.bad{border-color:var(--red);background:#fff1f4}
+.feedback{text-align:center;font-weight:900;min-height:25px;margin:13px 0}.big{font-size:38px;font-weight:950}
+.segment{display:flex;gap:7px}.segment button{flex:1}.on{outline:3px solid #4bb5e8!important;background:#dff4ff!important;color:#237ca8!important;box-shadow:0 0 0 3px #effaff inset}
+@media(max-width:520px){.choices{grid-template-columns:1fr}.row{flex-direction:column;align-items:stretch}.card{padding:16px}}
+</style>
+</head>
+<body>
+<main>
+<header class="top"><div><h1><span class="logo">TOEFL</span> POP!</h1><div class="sub">10秒チャレンジで語彙力アップ</div></div><span class="tag">MY VOCAB LAB</span></header>
+<nav><button class="tab active" data-page="home">クイズ</button><button class="tab" data-page="words">単語帳</button><button class="tab" data-page="review">復習</button><button class="tab" data-page="stats">学習記録</button></nav>
+<section id="home">
+<div class="card"><h2>🎮 出題モード</h2><div class="row"><button id="mine" class="primary">マイ単語帳</button><button id="mix" class="secondary">TOEFLミックス</button></div><p id="modeDesc" class="muted">登録した単語だけから出題するよ。</p><div class="pills"><span class="pill" id="wordN">登録 0語</span><span class="pill" id="wrongN">復習 0語</span></div></div>
+<div class="card"><h2>🌈 難易度</h2><div class="segment"><button type="button" id="easy" class="secondary on" aria-pressed="true">LEVEL 1</button><button type="button" id="hard" class="secondary" aria-pressed="false">LEVEL 2</button></div><p id="levelDesc" class="muted">英単語を見て、日本語の意味を4択から選ぶよ。</p><label>出題数</label><select id="num"><option value="10">10問</option><option value="20">20問</option><option value="all">全問</option></select><button class="primary" id="begin" style="width:100%;margin-top:12px">クイズ START!</button><p class="muted">制限時間は1問10秒。時間切れも復習リストに入るよ。</p></div>
+<div class="card"><h2>🏆 今日のスコア</h2><div class="pills"><span class="stat" id="attempts">回答 0回</span><span class="stat" id="correct">正解 0回</span><span class="stat" id="rate">正答率 --</span><span class="stat" id="streak">最高連続 0問</span></div></div>
+<div class="card"><h2>🎵 BGM</h2><div class="row"><button id="music" class="secondary">BGM ON</button><span class="muted">オリジナルの電子音BGM。画面を開いたあとにONにしてね。</span></div></div>
+</section>
+<section id="words" class="hidden">
+<div class="card"><h2>📚 マイ単語帳</h2>
+<div class="row"><div><label>英単語</label><input id="en" placeholder="例：skill"></div><div><label>日本語（意味または読み）</label><input id="ja" placeholder="例：技能 または ぎのう"></div></div>
+<label>読み（任意・LEVEL 2用）</label><input id="reading" type="hidden" value="">
+<p class="muted">日本語欄が「ぎのう」のようにひらがななら、読み欄は空欄でOK。漢字で「技能」と入れる場合だけ読みも入れてね。</p>
+<button id="add" class="primary" style="margin-top:10px">単語を追加</button>
+<label>まとめて登録（英単語, 日本語［, 読み］）</label><textarea id="bulk" placeholder="skill, ぎのう&#10;skill, 技能, ぎのう"></textarea><button id="bulkAdd" class="secondary">まとめて追加</button>
+<hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
+<h2>📷 写真から単語を読み取る</h2><p class="muted">単語帳やプリントを撮影・選択すると、英単語をOCRで読み取るよ。読み取り後に日本語訳を入力して登録してね。OCRは初回のみ通信が必要です。</p>
+<input type="file" id="photo" accept="image/*" capture="environment"><button id="scan" class="pink" style="width:100%;margin-top:9px">写真を読み取る</button><p id="ocrStatus" class="muted"></p><label>OCR候補（追加したい単語を選択）</label><div id="ocrCandidates" class="list"></div><textarea id="ocrText" class="hidden" placeholder="OCR内部データ"></textarea><p class="muted">チェックを外した単語は追加されないよ。追加後、日本語の意味または読みを編集してね。</p><button id="ocrImport" class="primary" style="width:100%">選択した単語を単語帳に追加</button>
+<div class="list" id="wordList"></div></div>
+</section>
+<section id="review" class="hidden"><div class="card"><h2>🔁 まちがい復習</h2><p class="muted">間違えた単語だけを集めたよ。復習クイズで正解しても、苦手記録として残るよ。</p><span class="pill" id="reviewN">0語</span><button id="reviewBegin" class="primary" style="width:100%;margin-top:12px">復習クイズを始める</button><div class="list" id="wrongList"></div></div></section>
+<section id="stats" class="hidden"><div class="card"><h2>📈 学習記録</h2><div class="pills"><span class="stat" id="sAttempts">回答 0回</span><span class="stat" id="sCorrect">正解 0回</span><span class="stat" id="sRate">正答率 --</span><span class="stat" id="sBest">最高連続 0問</span></div><h2 style="margin-top:20px">苦手単語 TOP</h2><div class="list" id="weakList"></div><h2 style="margin-top:20px">最近の学習</h2><div class="list" id="historyList"></div></div></section>
+<section id="quiz" class="hidden"><div class="card"><div class="qtop"><span class="muted" id="qNum">1 / 10</span><span class="timer" id="timer">10.0</span></div><div class="progress"><div class="bar" id="bar"></div></div><div class="word" id="prompt">word</div><div id="choices" class="choices"></div><div class="feedback" id="feedback"></div><div class="center"><button id="next" class="primary hidden">次へ</button></div></div></section>
+<section id="result" class="hidden"><div class="card center"><h2>FINISH!</h2><div class="big" id="score">0 / 0</div><p id="resultDesc" class="muted"></p><button class="primary" id="homeBtn">ホームへ</button><button class="secondary" id="reviewBtn">復習リストへ</button></div></section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script>
+const vocab=[
+["analyze", "分析する", "L1"],
+["approach", "方法、取り組む", "L1"],
+["assess", "評価する", "L1"],
+["assume", "仮定する", "L1"],
+["benefit", "利益、恩恵", "L1"],
+["capacity", "能力、容量", "L1"],
+["challenge", "課題、挑戦", "L1"],
+["circumstance", "状況、事情", "L1"],
+["conclude", "結論づける", "L1"],
+["conduct", "行う、実施する", "L1"],
+["consequence", "結果、影響", "L1"],
+["considerable", "かなりの", "L1"],
+["constitute", "構成する", "L1"],
+["consume", "消費する", "L1"],
+["contribute", "貢献する", "L1"],
+["controversy", "論争", "L1"],
+["decline", "減少する、断る", "L1"],
+["derive", "引き出す、由来する", "L1"],
+["distribute", "分配する", "L1"],
+["emerge", "現れる", "L1"],
+["establish", "設立する、確立する", "L1"],
+["evident", "明らかな", "L1"],
+["fluctuate", "変動する", "L2"],
+["fundamental", "基本的な", "L1"],
+["generate", "生み出す", "L1"],
+["hypothesis", "仮説", "L1"],
+["indicate", "示す", "L1"],
+["interpret", "解釈する", "L1"],
+["investigate", "調査する", "L1"],
+["maintain", "維持する", "L1"],
+["majority", "大多数", "L1"],
+["occur", "起こる", "L1"],
+["obtain", "得る", "L1"],
+["potential", "潜在的な", "L1"],
+["previous", "以前の", "L1"],
+["principle", "原理、原則", "L1"],
+["significant", "重要な、かなりの", "L1"],
+["specific", "特定の、具体的な", "L1"],
+["sufficient", "十分な", "L1"],
+["theory", "理論", "L1"],
+["vary", "変化する", "L1"],
+["whereas", "一方で", "L2"],
+["allocate", "割り当てる", "L2"],
+["ambiguous", "曖昧な", "L2"],
+["coherent", "首尾一貫した", "L2"],
+["comprehensive", "包括的な", "L2"],
+["empirical", "経験的な", "L2"],
+["inevitable", "避けられない", "L2"],
+["preliminary", "予備的な", "L2"],
+["subsequent", "その後の", "L2"],
+["sustain", "維持する、支える", "L2"],
+["abandon", "放棄する", "L1"],
+["abstract", "抽象的な", "L1"],
+["abundant", "豊富な", "L1"],
+["accelerate", "加速する", "L1"],
+["access", "利用する", "L1"],
+["accommodate", "収容する", "L1"],
+["accompany", "伴う", "L1"],
+["accumulate", "蓄積する", "L1"],
+["accurate", "正確な", "L1"],
+["achieve", "達成する", "L1"],
+["acknowledge", "認める", "L1"],
+["acquire", "獲得する", "L1"],
+["adapt", "適応する", "L1"],
+["adequate", "十分な", "L1"],
+["adjacent", "隣接した", "L1"],
+["adjust", "調整する", "L1"],
+["advocate", "支持する", "L1"],
+["affect", "影響を与える", "L1"],
+["aggregate", "集合した", "L1"],
+["alter", "変える", "L1"],
+["alternative", "代替の", "L1"],
+["anticipate", "予測する", "L1"],
+["apparent", "明らかな", "L1"],
+["applicable", "適用できる", "L1"],
+["appropriate", "適切な", "L1"],
+["approximate", "おおよその", "L1"],
+["arbitrary", "任意の", "L1"],
+["arise", "生じる", "L1"],
+["artificial", "人工的な", "L1"],
+["assign", "割り当てる", "L1"],
+["attain", "達成する", "L1"],
+["attribute", "属性", "L1"],
+["authentic", "本物の", "L1"],
+["available", "利用可能な", "L1"],
+["aware", "気づいている", "L1"],
+["bias", "偏り", "L1"],
+["brief", "簡潔な", "L1"],
+["category", "分類", "L1"],
+["cease", "停止する", "L1"],
+["clarify", "明確にする", "L1"],
+["coincide", "同時に起こる", "L1"],
+["collapse", "崩壊する", "L1"],
+["combine", "結合する", "L1"],
+["commence", "始まる", "L1"],
+["compensate", "補償する", "L1"],
+["compile", "まとめる", "L1"],
+["complement", "補完する", "L1"],
+["complex", "複雑な", "L1"],
+["component", "構成要素", "L1"],
+["concentrate", "集中する", "L1"],
+["concurrent", "同時の", "L1"],
+["confer", "授与する", "L1"],
+["confine", "限定する", "L1"],
+["confirm", "確認する", "L1"],
+["conflict", "対立", "L1"],
+["conform", "従う", "L1"],
+["consecutive", "連続した", "L1"],
+["consistent", "一貫した", "L1"],
+["constrain", "制限する", "L1"],
+["construct", "構築する", "L1"],
+["contemporary", "現代の", "L1"],
+["context", "文脈", "L1"],
+["contract", "契約", "L1"],
+["contradict", "矛盾する", "L1"],
+["contrast", "対比する", "L1"],
+["convert", "変換する", "L1"],
+["convince", "納得させる", "L1"],
+["core", "中心", "L1"],
+["correspond", "一致する", "L1"],
+["crucial", "極めて重要な", "L1"],
+["deduce", "推論する", "L1"],
+["define", "定義する", "L1"],
+["demonstrate", "実証する", "L1"],
+["denote", "示す", "L1"],
+["detect", "検出する", "L1"],
+["deviate", "逸脱する", "L1"],
+["diminish", "減少する", "L1"],
+["discrete", "個別の", "L1"],
+["discriminate", "区別する", "L1"],
+["display", "表示する", "L1"],
+["dispose", "処分する", "L1"],
+["distinct", "明確に異なる", "L1"],
+["distort", "ゆがめる", "L1"],
+["diverse", "多様な", "L1"],
+["domestic", "国内の", "L1"],
+["dominant", "支配的な", "L1"],
+["duration", "期間", "L1"],
+["dynamic", "動的な", "L1"],
+["eliminate", "除去する", "L1"],
+["enable", "可能にする", "L1"],
+["encounter", "遭遇する", "L1"],
+["enhance", "高める", "L1"],
+["ensure", "確実にする", "L1"],
+["entity", "実体", "L1"],
+["equivalent", "同等の", "L1"],
+["erode", "侵食する", "L1"],
+["estimate", "推定する", "L1"],
+["evaluate", "評価する", "L1"],
+["exceed", "上回る", "L1"],
+["exclude", "除外する", "L1"],
+["expand", "拡大する", "L1"],
+["explicit", "明確な", "L1"],
+["exploit", "活用する", "L1"],
+["facilitate", "促進する", "L1"],
+["factor", "要因", "L1"],
+["feasible", "実行可能な", "L1"],
+["feature", "特徴", "L1"],
+["finite", "有限の", "L1"],
+["focus", "焦点を当てる", "L1"],
+["framework", "枠組み", "L1"],
+["global", "世界的な", "L1"],
+["grant", "与える", "L1"],
+["highlight", "強調する", "L1"],
+["identify", "特定する", "L1"],
+["illustrate", "説明する", "L1"],
+["imply", "暗示する", "L1"],
+["impose", "課す", "L1"],
+["incentive", "動機", "L1"],
+["incidence", "発生率", "L1"],
+["incline", "傾く", "L1"],
+["incorporate", "取り入れる", "L1"],
+["infer", "推論する", "L1"],
+["inhibit", "抑制する", "L1"],
+["initial", "初期の", "L1"],
+["innovate", "革新する", "L1"],
+["integrate", "統合する", "L1"],
+["intense", "強烈な", "L1"],
+["interact", "相互作用する", "L1"],
+["intervene", "介入する", "L1"],
+["intrinsic", "本質的な", "L1"],
+["isolate", "隔離する", "L1"],
+["issue", "問題", "L1"],
+["justify", "正当化する", "L1"],
+["manipulate", "操作する", "L1"],
+["mature", "成熟した", "L1"],
+["maximize", "最大化する", "L1"],
+["mechanism", "仕組み", "L1"],
+["method", "方法", "L1"],
+["minimize", "最小化する", "L1"],
+["modify", "修正する", "L1"],
+["monitor", "監視する", "L1"],
+["mutual", "相互の", "L1"],
+["negligible", "無視できる", "L1"],
+["obvious", "明らかな", "L1"],
+["offset", "相殺する", "L1"],
+["ongoing", "進行中の", "L1"],
+["orient", "方向づける", "L1"],
+["outcome", "結果", "L1"],
+["overall", "全体的な", "L1"],
+["parameter", "要因", "L1"],
+["participate", "参加する", "L1"],
+["perceive", "認識する", "L1"],
+["persist", "持続する", "L1"],
+["perspective", "観点", "L1"],
+["phenomenon", "現象", "L1"],
+["precede", "先行する", "L1"],
+["precise", "正確な", "L1"],
+["predict", "予測する", "L1"],
+["preserve", "保存する", "L1"],
+["primary", "主要な", "L1"],
+["proceed", "進む", "L1"],
+["prohibit", "禁止する", "L1"],
+["prominent", "著名な", "L1"],
+["proportion", "割合", "L1"],
+["prospect", "見込み", "L1"],
+["pursue", "追求する", "L1"],
+["range", "範囲", "L1"],
+["react", "反応する", "L1"],
+["recover", "回復する", "L1"],
+["refine", "改善する", "L1"],
+["regulate", "規制する", "L1"],
+["reinforce", "強化する", "L1"],
+["reject", "拒否する", "L1"],
+["relevant", "関連する", "L1"],
+["reluctant", "気が進まない", "L1"],
+["require", "必要とする", "L1"],
+["reside", "居住する", "L1"],
+["resolve", "解決する", "L1"],
+["restrict", "制限する", "L1"],
+["retain", "保持する", "L1"],
+["reveal", "明らかにする", "L1"],
+["rigid", "硬直した", "L1"],
+["role", "役割", "L1"],
+["sequence", "順序", "L1"],
+["simulate", "模擬する", "L1"],
+["sole", "唯一の", "L1"],
+["stable", "安定した", "L1"],
+["statistic", "統計値", "L1"],
+["substitute", "代用する", "L1"],
+["temporary", "一時的な", "L1"],
+["terminate", "終了する", "L1"],
+["transform", "変換する", "L1"],
+["transmit", "伝達する", "L1"],
+["trend", "傾向", "L1"],
+["undergo", "経験する", "L1"],
+["undertake", "引き受ける", "L1"],
+["uniform", "均一な", "L1"],
+["valid", "妥当な", "L1"],
+["verify", "検証する", "L1"],
+["virtual", "仮想の", "L1"],
+["visible", "目に見える", "L1"],
+["widespread", "広範囲の", "L1"],
+["agriculture", "農業", "L1"],
+["ancestor", "祖先", "L1"],
+["ancient", "古代の", "L1"],
+["atmosphere", "大気", "L1"],
+["biodiversity", "生物多様性", "L1"],
+["carbon", "炭素", "L1"],
+["cell", "細胞", "L1"],
+["climate", "気候", "L1"],
+["conservation", "保全", "L1"],
+["ecosystem", "生態系", "L1"],
+["evolution", "進化", "L1"],
+["fossil", "化石", "L1"],
+["genetic", "遺伝の", "L1"],
+["habitat", "生息地", "L1"],
+["organism", "生物", "L1"],
+["population", "個体群", "L1"],
+["predator", "捕食者", "L1"],
+["species", "種", "L1"],
+["survive", "生き残る", "L1"],
+["territory", "領域", "L1"],
+["urban", "都市の", "L1"],
+["rural", "農村の", "L1"],
+["migration", "移動", "L1"],
+["civilization", "文明", "L1"],
+["colonial", "植民地の", "L1"],
+["commerce", "商業", "L1"],
+["economy", "経済", "L1"],
+["industry", "産業", "L1"],
+["institution", "制度", "L1"],
+["legislation", "法律", "L1"],
+["policy", "政策", "L1"],
+["revenue", "収入", "L1"],
+["resource", "資源", "L1"],
+["sector", "部門", "L1"],
+["strategy", "戦略", "L1"],
+["technology", "技術", "L1"],
+["transport", "輸送", "L1"],
+["culture", "文化", "L1"],
+["tradition", "伝統", "L1"],
+["archaeology", "考古学", "L1"],
+["artifact", "人工物", "L1"],
+["chronological", "年代順の", "L1"],
+["historical", "歴史的な", "L1"],
+["literature", "文学", "L1"],
+["manuscript", "写本", "L1"],
+["philosophy", "哲学", "L1"],
+["religion", "宗教", "L1"],
+["architecture", "建築", "L1"],
+["composition", "構成", "L1"],
+["creative", "創造的な", "L1"],
+["design", "設計", "L1"],
+["innovation", "革新", "L1"],
+["visual", "視覚の", "L1"],
+["auditory", "聴覚の", "L1"],
+["cognitive", "認知の", "L1"],
+["behavior", "行動", "L1"],
+["motivation", "動機", "L1"],
+["psychological", "心理的な", "L1"],
+["memory", "記憶", "L1"],
+["language", "言語", "L1"],
+["communication", "意思疎通", "L1"],
+["research", "研究", "L1"],
+["evidence", "証拠", "L1"],
+["data", "データ", "L1"],
+["survey", "調査", "L1"],
+["variable", "変数", "L1"],
+["sample", "標本", "L1"],
+["experiment", "実験", "L1"],
+["observation", "観察", "L1"],
+["conclusion", "結論", "L1"],
+["assumption", "仮定", "L1"]
+];
+let words=JSON.parse(localStorage.getItem("pop_words")||"[]"),wrong=JSON.parse(localStorage.getItem("pop_wrong")||"[]"),stats=JSON.parse(localStorage.getItem("pop_stats")||'{"attempts":0,"correct":0,"streak":0,"best":0}'),history=JSON.parse(localStorage.getItem("pop_history")||"[]"),mode="mine",level=1,pool=[],idx=0,score=0,locked=false,clock=null,left=10,reviewMode=false,musicOn=false,audio=null,osc=[];
+const $=x=>document.getElementById(x),esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function save(){localStorage.setItem("pop_words",JSON.stringify(words));localStorage.setItem("pop_wrong",JSON.stringify(wrong));localStorage.setItem("pop_stats",JSON.stringify(stats));localStorage.setItem("pop_history",JSON.stringify(history));render()}
+function show(id){["home","words","review","stats","quiz","result"].forEach(x=>$(x).classList.toggle("hidden",x!==id));document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.page===id));if(["home","words","review","stats"].includes(id))render()}
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>show(b.dataset.page));
+function render(){
+$("wordN").textContent=`登録 ${words.length}語`;$("wrongN").textContent=`復習 ${wrong.length}語`;$("reviewN").textContent=`${wrong.length}語`;
+for(const [a,b] of [["attempts",`回答 ${stats.attempts}回`],["correct",`正解 ${stats.correct}回`],["rate",`正答率 ${stats.attempts?Math.round(stats.correct/stats.attempts*100)+"%":"--"}`],["streak",`最高連続 ${stats.best}問`],["sAttempts",`回答 ${stats.attempts}回`],["sCorrect",`正解 ${stats.correct}回`],["sRate",`正答率 ${stats.attempts?Math.round(stats.correct/stats.attempts*100)+"%":"--"}`],["sBest",`最高連続 ${stats.best}問`]])$(a).textContent=b;
+$("wordList").innerHTML=words.map((w,i)=>`<div class="item"><span><b>${esc(w.en)}</b><br><small>${esc(w.ja)}${w.reading?` ／ ${esc(w.reading)}`:""}</small></span><span><button class="secondary" data-edit="${i}">編集</button> <button class="pink" data-remove="${i}">削除</button></span></div>`).join("")||'<p class="muted">単語を登録してね。</p>';
+$("wrongList").innerHTML=wrong.map(w=>`<div class="item"><span><b>${esc(w.en)}</b><br><small>${esc(w.ja)} ・ミス ${w.misses||1}回</small></span><span class="pill">復習</span></div>`).join("")||'<p class="muted">まだ間違えた単語はないよ！</p>';
+$("weakList").innerHTML=[...wrong].sort((a,b)=>(b.misses||1)-(a.misses||1)).slice(0,10).map(w=>`<div class="item"><b>${esc(w.en)}</b><small>${w.misses||1}回ミス</small></div>`).join("")||'<p class="muted">まだデータがありません。</p>';$("historyList").innerHTML=history.slice(0,12).map(h=>`<div class="item"><span><b>${esc(h.date)}</b><br><small>${h.level}・${h.mode}</small></span><span class="pill">${h.score}/${h.total}</span></div>`).join("")||'<p class="muted">クイズをするとここに記録されるよ。</p>';
+}
+$("mine").onclick=()=>{mode="mine";$("mine").className="primary";$("mix").className="secondary";$("modeDesc").textContent="登録した単語だけから出題するよ。"};
+$("mix").onclick=()=>{mode="mix";$("mix").className="primary";$("mine").className="secondary";$("modeDesc").textContent="マイ単語帳にTOEFL頻出語彙を追加して出題するよ。"};
+$("easy").onclick=()=>setLevel(1);$("hard").onclick=()=>setLevel(2);
+function isKanaOnly(s){return /^[ぁ-んァ-ヶー\s]+$/.test((s||"").trim())}
+function readingOf(w){return (w.reading||"").trim() || (isKanaOnly(w.ja)?w.ja.trim():"")}
+function setLevel(n){level=n;let e=$("easy"),h=$("hard");e.classList.toggle("on",n===1);h.classList.toggle("on",n===2);e.setAttribute("aria-pressed",n===1);h.setAttribute("aria-pressed",n===2);$("levelDesc").textContent=n===1?"英単語を見て、日本語の意味を4択から選ぶよ。":"日本語の読みを、全部伏せた状態から1文字ずつ4択で完成させるモード！"}
+function addWord(en,ja,reading=""){en=en.trim();ja=ja.trim();reading=reading.trim();if(!ja&&reading)ja=reading;if(en&&ja&&!words.some(w=>w.en.toLowerCase()===en.toLowerCase()))words.push({en,ja,reading,level:"L1"})}
+$("add").onclick=()=>{addWord($("en").value,$("ja").value,$("reading").value);$("en").value="";$("ja").value="";$("reading").value="";save()};
+$("bulkAdd").onclick=()=>{
+let n=0,skip=0;
+for(let l of $("bulk").value.split(/\r?\n/)){
+  l=l.trim();if(!l)continue;
+  let p;
+  if(/[,，\t]/.test(l))p=l.split(/[,，\t]+/).map(x=>x.trim()).filter(Boolean);
+  else{let m=l.match(/^([A-Za-z][A-Za-z'-]*)\s+(.+)$/);p=m?[m[1],m[2].trim()]:[]}
+  if(p.length<2){skip++;continue}
+  let old=words.length;addWord(p[0],p[1],"");if(words.length>old)n++;else skip++;
+}
+$("bulk").value="";save();alert(`${n}語追加したよ！${skip?`（${skip}行は重複または形式違い）`:""}`);
+};
+$("wordList").onclick=e=>{let i=e.target.dataset.remove;if(i!==undefined){words.splice(+i,1);save();return}let j=e.target.dataset.edit;if(j!==undefined){let w=words[+j];let v=prompt(`${w.en} の日本語（意味またはひらがなの読み）`,w.ja==="意味を入力"?"":w.ja);if(v===null)return;let r=prompt(`${w.en} の読み（日本語欄が漢字のときだけ・任意）`,w.reading||"");if(r===null)return;if(v.trim()||r.trim()){w.ja=v.trim()||r.trim();w.reading=r.trim();save()}}};
+function shuffle(a){return [...a].sort(()=>Math.random()-.5)}
+function available(){let src=reviewMode?wrong:mode==="mine"?words:[...words,...vocab.filter(v=>!words.some(w=>w.en.toLowerCase()===v[0].toLowerCase())).map(v=>({en:v[0],ja:v[1],reading:"",level:v[2]}))];if(level===2)src=src.filter(w=>readingOf(w)&&kana(readingOf(w)).length);return src}
+$("begin").onclick=()=>start(false);$("reviewBegin").onclick=()=>start(true);
+function start(rev){reviewMode=rev;let src=available();if(level===1&&src.length<4)return alert("LEVEL 1の4択には単語が4語以上必要だよ。");if(level===2&&src.length<1)return alert("LEVEL 2で使える「読み」がある単語を1語以上登録してね。日本語欄がひらがななら読み欄は空欄でOK！");let n=$("num").value==="all"?src.length:+$("num").value;pool=[];let bag=[];while(pool.length<n){if(!bag.length)bag=shuffle([...src]);pool.push(bag.pop());}idx=0;score=0;show("quiz");question()}
+function kana(s){return s.replace(/[、。，・\s]/g,"").replace(/[ァ-ヶ]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60)).split("")}
+function question(){
+if(idx>=pool.length)return finish();locked=false;left=10;$("timer").textContent="10.0";$("feedback").textContent="";$("next").classList.add("hidden");let w=pool[idx];$("qNum").textContent=`${idx+1} / ${pool.length}`;$("bar").style.width=`${idx/pool.length*100}%`;$("prompt").textContent=w.en;
+if(level===1){let others=shuffle(available().filter(x=>x.en!==w.en)).slice(0,3);let opts=shuffle([w,...others]);$("choices").innerHTML=opts.map((o,i)=>`<button class="choice" data-value="${esc(o.en)}"><b>${"ABCD"[i]}</b>${esc(o.ja)}</button>`).join("");}
+else{let chars=kana(readingOf(w));if(!chars.length){answer(null);return}drawKana(w,chars,0);return;}
+$("choices").querySelectorAll("button").forEach(b=>b.onclick=()=>answer(b.dataset.value));
+clock=setInterval(()=>{left=Math.max(0,left-.1);$("timer").textContent=left.toFixed(1);if(left<=0)answer(null)},100);
+}
+function drawKana(w,chars,pos){
+clearInterval(clock);
+locked=false;
+let shown=chars.map((c,i)=>i<pos?c:"＿").join(" ");
+$("prompt").textContent=w.en+" · "+shown;
+$("feedback").textContent=(pos+1)+"文字目 / "+chars.length+"文字";
+$("feedback").style.color="var(--muted)";
+let correct=chars[pos];
+let kanaPool=[..."あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをんがぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽ"];
+let wrongs=shuffle(kanaPool.filter((x,i,a)=>x!==correct&&a.indexOf(x)===i)).slice(0,3);
+let opts=shuffle([correct,...wrongs]);
+$("choices").innerHTML=opts.map((x,i)=>`<button type="button" class="choice" data-kana="${esc(x)}"><b>${"ABCD"[i]}</b>${esc(x)}</button>`).join("");
+$("choices").querySelectorAll("[data-kana]").forEach(btn=>{
+  btn.onclick=()=>{
+    if(locked)return;
+    locked=true;
+    if(btn.dataset.kana===correct){
+      btn.classList.add("good");
+      let next=pos+1;
+      setTimeout(()=>{
+        if(next<chars.length){
+          drawKana(w,chars,next);
+        }else{
+          $("prompt").textContent=w.en+" · "+chars.join(" ");
+          $("feedback").textContent="完成！";
+          $("feedback").style.color="var(--green)";
+          setTimeout(()=>answer(true),250);
+        }
+      },180);
+    }else{
+      btn.classList.add("bad");
+      $("choices").querySelectorAll("[data-kana]").forEach(b=>{if(b.dataset.kana===correct)b.classList.add("good")});
+      setTimeout(()=>answer(false),350);
+    }
+  };
+});
+left=10;
+$("timer").textContent="10.0";
+clock=setInterval(()=>{
+  left=Math.max(0,left-.1);
+  $("timer").textContent=left.toFixed(1);
+  if(left<=0){clearInterval(clock);answer(false);}
+},100);
+}
+function answer(selected){
+if(locked&&level===1)return;
+clearInterval(clock);
+let w=pool[idx];
+let ok=level===2?(selected===true):(selected===w.en);
+locked=true;
+stats.attempts++;
+if(ok){
+  score++;stats.correct++;stats.streak++;stats.best=Math.max(stats.best,stats.streak);
+  $("feedback").textContent=level===2?"正解！ NICE!":"正解！ NICE!";
+  $("feedback").style.color="var(--green)";
+}else{
+  stats.streak=0;
+  let old=wrong.find(x=>x.en===w.en);
+  if(old)old.misses=(old.misses||1)+1;else wrong.push({...w,misses:1});
+  let r=readingOf(w);
+  $("feedback").textContent=`不正解　答え：${w.ja}${r&&r!==w.ja?`（${r}）`:""}`;
+  $("feedback").style.color="var(--red)";
+}
+save();
+$("choices").querySelectorAll("button").forEach(b=>b.disabled=true);
+$("next").textContent=idx===pool.length-1?"結果を見る":"次の問題";
+$("next").classList.remove("hidden");
+}
+$("next").onclick=()=>{idx++;question()};
+function finish(){clearInterval(clock);history.unshift({date:new Date().toLocaleString("ja-JP",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"}),score,total:pool.length,level:`LEVEL ${level}`,mode:reviewMode?"復習":mode==="mine"?"マイ単語帳":"TOEFLミックス"});history=history.slice(0,30);save();$("bar").style.width="100%";$("score").textContent=`${score} / ${pool.length}`;$("resultDesc").textContent=`正答率 ${Math.round(score/pool.length*100)}%。ミスした単語は復習リストに保存されたよ。`;show("result")}
+$("homeBtn").onclick=()=>show("home");$("reviewBtn").onclick=()=>show("review");
+let ocrWords=[];
+function renderOcrCandidates(){
+  $("ocrCandidates").innerHTML=ocrWords.length?ocrWords.map((w,i)=>`<label class="item" style="cursor:pointer"><span><input type="checkbox" data-ocr="${i}" checked style="width:auto;margin-right:9px"><b>${esc(w)}</b></span><small>追加する</small></label>`).join(""):'<p class="muted">まだ候補はありません。</p>';
+}
+$("scan").onclick=async()=>{
+  let f=$("photo").files[0];if(!f)return alert("先に写真を選んでね。");
+  if(!window.Tesseract)return alert("OCRライブラリを読み込めません。ネット接続を確認してね。");
+  $("ocrStatus").textContent="読み取り中…少し待ってね";
+  try{
+    let r=await Tesseract.recognize(f,"eng");
+    let raw=(r.data.text||"").replace(/[’‘]/g,"'");
+    let found=raw.match(/[A-Za-z][A-Za-z'-]{1,}/g)||[];
+    ocrWords=[...new Set(found.map(x=>x.replace(/^[-']+|[-']+$/g,"").toLowerCase()).filter(x=>x.length>=2))];
+    $("ocrText").value=ocrWords.join("\n");
+    renderOcrCandidates();
+    $("ocrStatus").textContent=ocrWords.length?`${ocrWords.length}個の英単語候補を見つけたよ。追加したいものにチェックを入れてね。`:"英単語候補を見つけられなかったよ。写真をもう少し近く・明るく撮ってみてね。";
+  }catch(e){$("ocrStatus").textContent="読み取りに失敗しました。写真を明るく、文字がまっすぐ写るように撮り直してね。"}
+};
+$("ocrImport").onclick=()=>{
+  let selected=[...document.querySelectorAll("#ocrCandidates input[data-ocr]:checked")].map(x=>ocrWords[+x.dataset.ocr]).filter(Boolean);
+  if(!selected.length)return alert("追加したい単語にチェックを入れてね。");
+  let added=0;
+  for(let en of selected){
+    if(!words.some(w=>w.en.toLowerCase()===en.toLowerCase())){
+      words.push({en,ja:"意味を入力",reading:"",level:"L1"});added++;
+    }
+  }
+  save();
+  $("ocrStatus").textContent=`${added}語を単語帳に追加したよ！下の一覧の「編集」から日本語を入れてね。`;
+  alert(`${added}語を追加したよ！`);
+};
+renderOcrCandidates();
+function musicStart(){let C=window.AudioContext||window.webkitAudioContext;if(!C)return;audio=audio||new C();audio.resume();let master=audio.createGain();master.gain.value=.028;master.connect(audio.destination);let melody=[659.25,783.99,987.77,1046.5,987.77,783.99,880,1174.66,1046.5,880,783.99,987.77];let i=0;function tone(freq,delay=0,vol=.28){let o=audio.createOscillator(),g=audio.createGain();o.type="sine";o.frequency.value=freq;let t=audio.currentTime+delay;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.015);g.gain.exponentialRampToValueAtTime(.0001,t+.16);o.connect(g);g.connect(master);o.start(t);o.stop(t+.18)}function beat(){if(!musicOn)return;let f=melody[i++%melody.length];tone(f);if(i%4===0)tone(f*1.5,.055,.16);setTimeout(beat,185)}beat()}
+$("music").onclick=()=>{musicOn=!musicOn;$("music").textContent=musicOn?"BGM OFF":"BGM ON";if(musicOn)musicStart()};
+render();
+if("serviceWorker"in navigator && location.protocol.startsWith("http"))navigator.serviceWorker.register("./sw.js").catch(()=>{});
+</script>
+</body></html>

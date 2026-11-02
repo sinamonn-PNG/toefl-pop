@@ -1,0 +1,9 @@
+{
+  "name": "TOEFL POP! 単語クイズ",
+  "short_name": "TOEFL POP!",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f4fbff",
+  "theme_color": "#73c9f4",
+  "description": "自分だけのTOEFL単語帳と4択クイズ"
+}
